@@ -29,4 +29,4 @@ add_subdirectory(${DEPENDENCIES_DIR}/boost EXCLUDE_FROM_ALL)
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
-Boost::asio Boost::logic)
+Boost::asio Boost::logic Boost::regex)

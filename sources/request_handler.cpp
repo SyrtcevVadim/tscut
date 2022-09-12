@@ -13,6 +13,8 @@
 #include <sstream>
 #include <string>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
+#include <iostream>
 #include "mime_types.hpp"
 #include "reply.hpp"
 #include "request.hpp"
@@ -41,6 +43,25 @@ void request_handler::handle_request(const request& req, reply& rep)
   {
     rep = reply::stock_reply(reply::bad_request);
     return;
+  }
+
+  // 
+
+  boost::regex cut_video_regex("^/(?<video_format>[^/]+)/(?<path_to_video>.+\.[^/]+)/(?<video_start_point_ms>[[:digit:]]+)/(?<video_length_ms>[[:digit:]]+)$");
+  boost::smatch search_result;
+  std::string::const_iterator begin = request_path.begin();
+  std::string::const_iterator end = request_path.end();
+  if (boost::regex_search(begin, end, search_result, cut_video_regex))
+  {
+    std::cout << "video format: " << search_result["video_format"] << std::endl
+              << "path to video: " << search_result["path_to_video"] << std::endl
+              << "video start point in ms: " << search_result["video_start_point_ms"] << std::endl
+              << "video length in ms: " << search_result["video_length_ms"] << std::endl;
+  }
+  else
+  {
+    std::cout << "Received url: " << request_path << std::endl;
+    std::cout << "Your url doesn't match the pattern!\n";
   }
 
   // If path ends in slash (i.e. is a directory) then add "index.html".
