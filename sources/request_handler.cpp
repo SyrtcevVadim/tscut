@@ -13,11 +13,11 @@
 #include <sstream>
 #include <string>
 #include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
 #include <iostream>
 #include "mime_types.hpp"
 #include "reply.hpp"
 #include "request.hpp"
+#include "path_parser.hpp"
 
 namespace http {
 namespace server {
@@ -45,18 +45,13 @@ void request_handler::handle_request(const request& req, reply& rep)
     return;
   }
 
-  // 
-
-  boost::regex cut_video_regex("^/(?<video_format>[^/]+)/(?<path_to_video>.+\.[^/]+)/(?<video_start_point_ms>[[:digit:]]+)/(?<video_length_ms>[[:digit:]]+)$");
-  boost::smatch search_result;
-  std::string::const_iterator begin = request_path.begin();
-  std::string::const_iterator end = request_path.end();
-  if (boost::regex_search(begin, end, search_result, cut_video_regex))
+  video_processing::cut_video_request cut_video_request;
+  if (video_processing::parse_cut_video_request(request_path, cut_video_request))
   {
-    std::cout << "video format: " << search_result["video_format"] << std::endl
-              << "path to video: " << search_result["path_to_video"] << std::endl
-              << "video start point in ms: " << search_result["video_start_point_ms"] << std::endl
-              << "video length in ms: " << search_result["video_length_ms"] << std::endl;
+    std::cout << "video format: " << cut_video_request.video_format << std::endl
+              << "path to video: " << cut_video_request.path_to_video << std::endl
+              << "video start point in ms: " << cut_video_request.video_start_point_ms << std::endl
+              << "video length in ms: " << cut_video_request.video_length_ms << std::endl;
   }
   else
   {
