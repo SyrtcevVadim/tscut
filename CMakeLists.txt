@@ -30,10 +30,19 @@ if (TESTS_ENABLED)
     add_subdirectory(tests)
 endif()
 
+
 # Собираем библиотеку Boost
 add_subdirectory(${DEPENDENCIES_DIR}/boost EXCLUDE_FROM_ALL)
+add_subdirectory(${DEPENDENCIES_DIR}/ffmpeg)
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
+# Мы указываем avutil вместо libavutil, т.к. на стадии линковки
+# Название библиотеки будет использоваться с параметром -l, который и поразумевает
+# часть lib
 target_link_libraries(${CMAKE_PROJECT_NAME}
-Boost::asio Boost::logic Boost::regex)
+Boost::asio 
+Boost::logic 
+Boost::regex 
+avutil
+avformat)

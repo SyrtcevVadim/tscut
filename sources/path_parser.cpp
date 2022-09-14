@@ -12,7 +12,7 @@ namespace video_processing
       (?<video_start_point_ms>[[:digit:]]+)/ - именованная группа для сохранения времени начала видео в мс. [[:digit:]]+ означает последовательность цифр, т.е. число
       (?<video_length_ms>[[:digit:]]+)$ - именованная группа для сохранения длительности видео в мс. Знак $ обозначает конец url
     */
-    boost::regex cut_video_regex("^/(?<video_format>[^/]+)/(?<path_to_video>.+\.[^/]+)/(?<video_start_point_ms>[[:digit:]]+)/(?<video_length_ms>[[:digit:]]+)$");
+    boost::regex cut_video_regex(R"(^/(?<video_format>[^/]+)/(?<path_to_video>.+\.[^/]+)/(?<video_start_point_ms>[[:digit:]]+)/(?<video_length_ms>[[:digit:]]+)$)");
     boost::smatch search_result;
     if (boost::regex_search(request_path.cbegin(), request_path.cend(), search_result, cut_video_regex))
     {
