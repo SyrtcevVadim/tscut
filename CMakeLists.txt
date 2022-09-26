@@ -21,9 +21,11 @@ ${SOURCES_DIR}/connection.cpp
 ${SOURCES_DIR}/mime_types.cpp
 ${SOURCES_DIR}/reply.cpp
 ${SOURCES_DIR}/request_handler.cpp
-${SOURCES_DIR}/path_parser.cpp
 ${SOURCES_DIR}/request_parser.cpp
 ${SOURCES_DIR}/server.cpp
+
+${SOURCES_DIR}/path_parser.cpp
+${SOURCES_DIR}/video_processing.cpp
 )
 
 if (TESTS_ENABLED)
@@ -33,7 +35,23 @@ endif()
 
 # Собираем библиотеку Boost
 add_subdirectory(${DEPENDENCIES_DIR}/boost EXCLUDE_FROM_ALL)
-add_subdirectory(${DEPENDENCIES_DIR}/ffmpeg)
+# Находим FFmpeg библиотеки
+set(FFMPEG_PREFIX $ENV{HOME}/libraries/ffmpeg)
+# Ищем библиотеки libavutil libavformat libavcodec
+# NO_DEFAULT отключает поиск библиотек в путях по умолчанию.
+# Например, у меня брались библиотеки из директории /usr/local/lib и брали статические библиотеки
+# Данные же конструкции берут библиотеки по пути ${FFMPEG_PREFIX}/lib
+find_library(FFMPEG_AVUTIL avutil PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
+find_library(FFMPEG_AVFORMAT avformat PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
+find_library(FFMPEG_AVCODED avcodec PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
+# Проверяем пути. Должно быть что-то подобное: $HOME/libraries/ffmpeg/lib/.so
+message(STATUS ${FFMPEG_AVUTIL})
+message(STATUS ${FFMPEG_AVFORMAT})
+message(STATUS ${FFMPEG_AVCODED})
+set(FFMPEG_INCLUDE_DIR ${FFMPEG_PREFIX}/include)
+message(STATUS ${FFMPEG_PREFIX})
+message(STATUS ${FFMPEG_INCLUDE_DIR})
+include_directories(${FFMPEG_INCLUDE_DIR})
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
@@ -44,5 +62,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 Boost::asio 
 Boost::logic 
 Boost::regex 
-avutil
-avformat)
+${FFMPEG_AVUTIL}
+${FFMPEG_AVFORMAT}
+${FFMPEG_AVCODED})

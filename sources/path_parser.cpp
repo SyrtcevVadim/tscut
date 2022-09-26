@@ -1,6 +1,6 @@
 #include "path_parser.hpp"
 
-namespace video_processing 
+namespace request_processing 
 {
   bool parse_cut_video_request(std::string &request_path, cut_video_request &cut_video_request)
   {
@@ -19,7 +19,7 @@ namespace video_processing
       cut_video_request.video_format = search_result["video_format"];
       cut_video_request.path_to_video = search_result["path_to_video"];
       cut_video_request.video_start_point_ms = std::stoull(search_result["video_start_point_ms"]);
-      cut_video_request.video_length_ms = std::stoull(search_result["video_length_ms"]);
+      cut_video_request.video_duration_ms = std::stoull(search_result["video_length_ms"]);
       return true;
     }
     return false;

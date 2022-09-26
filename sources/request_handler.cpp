@@ -18,6 +18,7 @@
 #include "reply.hpp"
 #include "request.hpp"
 #include "path_parser.hpp"
+#include "video_processing.hpp"
 
 namespace http {
 namespace server {
@@ -45,13 +46,14 @@ void request_handler::handle_request(const request& req, reply& rep)
     return;
   }
 
-  video_processing::cut_video_request cut_video_request;
-  if (video_processing::parse_cut_video_request(request_path, cut_video_request))
+  request_processing::cut_video_request cut_video_request;
+  if (request_processing::parse_cut_video_request(request_path, cut_video_request))
   {
     std::cout << "video format: " << cut_video_request.video_format << std::endl
               << "path to video: " << cut_video_request.path_to_video << std::endl
               << "video start point in ms: " << cut_video_request.video_start_point_ms << std::endl
-              << "video length in ms: " << cut_video_request.video_length_ms << std::endl;
+              << "video duration in ms: " << cut_video_request.video_duration_ms << std::endl;
+    video_processing::cut_video(doc_root_, cut_video_request);
   }
   else
   {
