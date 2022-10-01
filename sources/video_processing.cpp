@@ -6,11 +6,17 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <algorithm>
 
 using namespace ffmpeg;
 
 namespace video_processing {
   const int64_t MS_IN_SECOND{1000};
+  /*
+  По какой-то причине при обрезании видео оно получается примерно на 70мс длиннее, чем надо
+  Я буду учитывать эту величину при обрезании видео
+  */
+  const int64_t EXTRA_VIDEO_DURATION_MS{70};
 
   std::optional<std::string> extract_video_segment_from_beginning(std::string &doc_root, request_processing::cut_video_request &request) {
     std::string path_to_input_file{doc_root+request.path_to_video};
@@ -127,6 +133,11 @@ namespace video_processing {
         if (av_read_frame(input_video_context.get_ptr(), current_packet.get_ptr()) < 0) {
             break;
         }
+        
+        // Проверяем, обрезаны ли все потоки. Если так, обработка оставшегося видео потока не имеет смысла
+        if (std::find(stream_has_been_cut.begin(), stream_has_been_cut.end(), false) == stream_has_been_cut.end()) {
+            break;
+        }
 
         // Не обрабатываем пакеты потока, который уже был обрезан
         if (stream_has_been_cut[current_packet->stream_index]) {
@@ -144,7 +155,7 @@ namespace video_processing {
 
         // Обрезаем видео
         AVRational time_base{in_stream->time_base};
-        int64_t pts_time_ms{(static_cast<double>(current_packet->pts - in_stream->start_time)*time_base.num/time_base.den)*MS_IN_SECOND};
+        int64_t pts_time_ms{(static_cast<double>(current_packet->pts - in_stream->start_time)*time_base.num/time_base.den)*MS_IN_SECOND + EXTRA_VIDEO_DURATION_MS};
         std::cout << "pts_time_ms: " << pts_time_ms << std::endl;
 
         if (pts_time_ms >= requested_duration_ms) {
