@@ -26,6 +26,7 @@ ${SOURCES_DIR}/server.cpp
 
 ${SOURCES_DIR}/path_parser.cpp
 ${SOURCES_DIR}/video_processing.cpp
+${SOURCES_DIR}/ffmpeg_guards.cpp
 )
 
 if (TESTS_ENABLED)
