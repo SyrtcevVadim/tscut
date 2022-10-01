@@ -47,13 +47,20 @@ void request_handler::handle_request(const request& req, reply& rep)
   }
 
   request_processing::cut_video_request cut_video_request;
+  std::string path_to_result_file{};
   if (request_processing::parse_cut_video_request(request_path, cut_video_request))
   {
     std::cout << "video format: " << cut_video_request.video_format << std::endl
               << "path to video: " << cut_video_request.path_to_video << std::endl
               << "video start point in ms: " << cut_video_request.video_start_point_ms << std::endl
               << "video duration in ms: " << cut_video_request.video_duration_ms << std::endl;
-    video_processing::cut_video(doc_root_, cut_video_request);
+    std::optional<std::string> result{video_processing::extract_video_segment_from_beginning(doc_root_, cut_video_request)};
+    if (result) {
+      path_to_result_file = *result;
+    } else {
+      rep = reply::stock_reply(reply::bad_request);
+      return;
+    }
   }
   else
   {
@@ -62,23 +69,23 @@ void request_handler::handle_request(const request& req, reply& rep)
   }
 
   // If path ends in slash (i.e. is a directory) then add "index.html".
-  if (request_path[request_path.size() - 1] == '/')
-  {
-    request_path += "index.html";
-  }
+  // if (request_path[request_path.size() - 1] == '/')
+  // {
+  //   request_path += "index.html";
+  // }
 
   // Determine the file extension.
-  std::size_t last_slash_pos = request_path.find_last_of("/");
-  std::size_t last_dot_pos = request_path.find_last_of(".");
-  std::string extension;
-  if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
-  {
-    extension = request_path.substr(last_dot_pos + 1);
-  }
+  // std::size_t last_slash_pos = request_path.find_last_of("/");
+  // std::size_t last_dot_pos = request_path.find_last_of(".");
+  // std::string extension;
+  // if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
+  // {
+  //   extension = request_path.substr(last_dot_pos + 1);
+  // }
 
   // Open the file to send back.
-  std::string full_path = doc_root_ + request_path;
-  std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
+  // std::string full_path = doc_root_ + request_path;
+  std::ifstream is(path_to_result_file, std::ios::in | std::ios::binary);
   if (!is)
   {
     rep = reply::stock_reply(reply::not_found);
@@ -94,7 +101,7 @@ void request_handler::handle_request(const request& req, reply& rep)
   rep.headers[0].name = "Content-Length";
   rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
   rep.headers[1].name = "Content-Type";
-  rep.headers[1].value = mime_types::extension_to_type(extension);
+  rep.headers[1].value = mime_types::extension_to_type(cut_video_request.video_format);
 }
 
 bool request_handler::url_decode(const std::string& in, std::string& out)

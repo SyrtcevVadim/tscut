@@ -25,6 +25,7 @@ struct mapping
   { "html", "text/html" },
   { "jpg", "image/jpeg" },
   { "png", "image/png" },
+  { "ts", "video/mp2t"},
   { 0, 0 } // Marks end of list.
 };
 

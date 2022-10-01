@@ -14,10 +14,11 @@ extern "C" {
 #include <iostream>
 #include <sstream>
 
+
 namespace video_processing {
   const int64_t MS_IN_SECOND{1000};
 
-  void cut_video(std::string &doc_root, request_processing::cut_video_request &request) {
+  std::optional<std::string> extract_video_segment_from_beginning(std::string &doc_root, request_processing::cut_video_request &request) {
     std::string path_to_input_file{doc_root+request.path_to_video};
     std::cout << "input_path: " << path_to_input_file << std::endl;
     const char* input_file_name{path_to_input_file.c_str()};
@@ -35,7 +36,7 @@ namespace video_processing {
       AVPacket *test_packet{av_packet_alloc()};
       if (test_packet == nullptr) {
           std::cerr << "Couldn't allocate AVPacket!\n";
-          return;
+          return std::nullopt;
       } else {
           // Освобождаем память, выделенную под сжатый фрейм
           av_packet_free(&test_packet);
@@ -46,13 +47,13 @@ namespace video_processing {
     // Считываем заголовок из первого видеофайла
     if (avformat_open_input(&input_video_format_context, input_file_name, 0, 0) < 0) {
         std::cerr << "Couldn't open input file " << input_file_name << std::endl;
-        return;
+        return std::nullopt;
     }
 
     // Извлекаем данные о потоках из видеофайла
     if (avformat_find_stream_info(input_video_format_context, 0) < 0) {
         std::cerr << "Failed to retrieve input stream information\n";
-        return;
+        return std::nullopt;
     }
 
     // Выводим метаданные о входном видеофайле
@@ -63,7 +64,7 @@ namespace video_processing {
     avformat_alloc_output_context2(&output_video_format_context, nullptr, nullptr, output_file_name);
     if (output_video_format_context == nullptr) {
         std::cerr << "Couldn't create output context\n";
-        return;
+        return std::nullopt;
     }
 
     
@@ -71,7 +72,7 @@ namespace video_processing {
     int32_t *stream_mapping{static_cast<int32_t*>(av_calloc(stream_mapping_size, sizeof(int32_t*)))};
     if (stream_mapping == nullptr) {
         std::cerr << "Couldn't allocate memory for stream mapping\n";
-        return;
+        return std::nullopt;
     }
 
     bool *stream_has_been_cut{static_cast<bool*>(av_calloc(stream_mapping_size, sizeof(bool*)))};
@@ -96,7 +97,7 @@ namespace video_processing {
         AVStream *out_stream{avformat_new_stream(output_video_format_context, nullptr)};
         if (out_stream == nullptr) {
             std::cerr << "Failed allocating output stream\n";
-            return;
+            return std::nullopt;
         }
         if (avcodec_parameters_copy(out_stream->codecpar, in_codec_parameters) < 0) {
             std::cerr << "Failed to copy codec parameters\n";
@@ -115,20 +116,20 @@ namespace video_processing {
     if (!(output_container_format->flags & AVFMT_NOFILE)) {
         if (avio_open(&output_video_format_context->pb, output_file_name, AVIO_FLAG_WRITE) < 0) {
             std::cerr << "Couldn't open output file " << output_file_name;
-            return;
+            return std::nullopt;
         }
     }
 
     // Пишем в выходной файл заголовки
     if (avformat_write_header(output_video_format_context, nullptr) < 0) {
         std::cerr << "Error occured when opening output file\n";
-        return;
+        return std::nullopt;
     }
 
     AVPacket *current_packet{av_packet_alloc()};
     if (current_packet == nullptr) {
         std::cerr << "Couldn't allocate AVPacket\n";
-        return;
+        return std::nullopt;
     }
     
     int64_t start_time_ms{input_video_format_context->start_time};
@@ -185,5 +186,7 @@ namespace video_processing {
 
     av_freep(&stream_mapping);
     av_freep(&stream_has_been_cut);
+
+    return path_to_output_file;
   }
 }
