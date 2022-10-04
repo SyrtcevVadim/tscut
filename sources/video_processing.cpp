@@ -13,10 +13,10 @@ using namespace ffmpeg;
 namespace video_processing {
   const int64_t MS_IN_SECOND{1000};
   /*
-  По какой-то причине при обрезании видео оно получается примерно на 70мс длиннее, чем надо
+  По какой-то причине при обрезании видео оно получается примерно на 60мс длиннее, чем надо
   Я буду учитывать эту величину при обрезании видео
   */
-  const int64_t EXTRA_VIDEO_DURATION_MS{70};
+  const int64_t EXTRA_VIDEO_DURATION_MS{60};
 
   std::optional<std::string> extract_video_segment_from_beginning(std::string &doc_root, request_processing::cut_video_request &request) {
     std::string path_to_input_file{doc_root+request.path_to_video};
