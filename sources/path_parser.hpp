@@ -1,10 +1,10 @@
 #pragma once
 
+#include "cut_video_request.hpp"
 #include <boost/regex.hpp>
 #include <string>
-#include "cut_video_request.hpp"
 
-namespace request_processing 
-{
-  bool parse_cut_video_request(std::string &request_path, cut_video_request &cut_video_request);
+namespace request_processing {
+bool parse_cut_video_request(std::string& request_path,
+                             cut_video_request& cut_video_request);
 }

@@ -3,9 +3,9 @@
 extern "C" {
 #endif
 
-#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
 #include <inttypes.h>
+#include <libavformat/avformat.h>
+#include <libavutil/timestamp.h>
 #ifdef __cplusplus
 }
 #endif
