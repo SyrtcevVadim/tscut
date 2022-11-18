@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 
 project(tscut
     VERSION 1.0
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Переменные структуры проекта
 set(SOURCES_DIR "sources")
@@ -12,7 +13,7 @@ set(DEPENDENCIES_DIR "dependencies")
 
 # Переменная для включения компиляции тестов
 # Если надо отключить тесты, выставить значение False
-set(TESTS_ENABLED TRUE)
+set(TESTS_ENABLED FALSE CACHE BOOL "Allows a user to build a tests")
 
 set(SOURCES 
 ${SOURCES_DIR}/main.cpp
@@ -29,7 +30,9 @@ ${SOURCES_DIR}/video_processing.cpp
 ${SOURCES_DIR}/ffmpeg_guards.cpp
 )
 
+
 if (TESTS_ENABLED)
+    message(STATUS "Tests are enabled..")
     add_subdirectory(tests)
 endif()
 
@@ -37,11 +40,15 @@ endif()
 # Собираем библиотеку Boost
 add_subdirectory(${DEPENDENCIES_DIR}/boost EXCLUDE_FROM_ALL)
 # Находим FFmpeg библиотеки
-set(FFMPEG_PREFIX $ENV{HOME}/libraries/ffmpeg)
+set(FFMPEG_PREFIX $ENV{HOME}/libraries/ffmpeg CACHE PATH "Set's a prefix to the FFmpeg library directory")
 # Ищем библиотеки libavutil libavformat libavcodec
 # NO_DEFAULT отключает поиск библиотек в путях по умолчанию.
 # Например, у меня брались библиотеки из директории /usr/local/lib и брали статические библиотеки
 # Данные же конструкции берут библиотеки по пути ${FFMPEG_PREFIX}/lib
+
+# Мы указываем avutil вместо libavutil, т.к. на стадии линковки
+# Название библиотеки будет использоваться с параметром -l, который и поразумевает
+# часть lib
 find_library(FFMPEG_AVUTIL avutil PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
 find_library(FFMPEG_AVFORMAT avformat PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
 find_library(FFMPEG_AVCODED avcodec PATHS ${FFMPEG_PREFIX}/lib NO_DEFAULT_PATH)
@@ -56,13 +63,11 @@ include_directories(${FFMPEG_INCLUDE_DIR})
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
-# Мы указываем avutil вместо libavutil, т.к. на стадии линковки
-# Название библиотеки будет использоваться с параметром -l, который и поразумевает
-# часть lib
 target_link_libraries(${CMAKE_PROJECT_NAME}
 Boost::asio 
 Boost::logic 
 Boost::regex 
 ${FFMPEG_AVUTIL}
 ${FFMPEG_AVFORMAT}
-${FFMPEG_AVCODED})
+${FFMPEG_AVCODED}
+PUBLIC date::date)

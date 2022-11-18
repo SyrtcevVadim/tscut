@@ -4,3 +4,6 @@
 [submodule "dependencies/catch2"]
 	path = dependencies/catch2
 	url = https://github.com/catchorg/Catch2.git
+[submodule "dependencies/date"]
+	path = dependencies/date
+	url = https://github.com/HowardHinnant/date.git
