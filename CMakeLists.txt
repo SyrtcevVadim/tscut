@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 project(tscut
     VERSION 1.0
+    LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Переменные структуры проекта
@@ -39,6 +40,9 @@ endif()
 
 # Собираем библиотеку Boost
 add_subdirectory(${DEPENDENCIES_DIR}/boost EXCLUDE_FROM_ALL)
+# Библиотека форматирования fmt 
+add_subdirectory(${DEPENDENCIES_DIR}/fmt)
+
 # Находим FFmpeg библиотеки
 set(FFMPEG_PREFIX $ENV{HOME}/libraries/ffmpeg CACHE PATH "Set's a prefix to the FFmpeg library directory")
 # Ищем библиотеки libavutil libavformat libavcodec
@@ -63,11 +67,11 @@ include_directories(${FFMPEG_INCLUDE_DIR})
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${CMAKE_PROJECT_NAME}
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
 Boost::asio 
 Boost::logic 
 Boost::regex 
 ${FFMPEG_AVUTIL}
 ${FFMPEG_AVFORMAT}
 ${FFMPEG_AVCODED}
-PUBLIC date::date)
+fmt::fmt)
