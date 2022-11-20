@@ -36,7 +36,9 @@ std::optional<std::string> extract_video_segment_from_beginning(
     {
         AVPacketWrapper test_packet;
         if (!test_packet.is_valid()) {
-            Logger::get_instance().err(R"(Couldn't allocate AVPacket while processing "{}" video)", request.path_to_video);
+            Logger::get_instance().err(
+                R"(Couldn't allocate AVPacket while processing "{}" video)",
+                request.path_to_video);
             return std::nullopt;
         }
     }
@@ -44,18 +46,21 @@ std::optional<std::string> extract_video_segment_from_beginning(
     // Считываем заголовок из входного видеофайла
     AVInputFormatContextWrapper input_video_context{path_to_input_file};
     if (!input_video_context.is_valid()) {
-        Logger::get_instance().err(R"(Couldn't open input file: "{}")", path_to_input_file);
+        Logger::get_instance().err(R"(Couldn't open input file: "{}")",
+                                   path_to_input_file);
         return std::nullopt;
     }
 
     // Извлекаем данные о потоках из видеофайла
     if (avformat_find_stream_info(input_video_context.get_ptr(), 0) < 0) {
-        Logger::get_instance().err(R"(Failed to retrieve input stream information while processing "{}" video)", request.path_to_video);
+        Logger::get_instance().err(
+            R"(Failed to retrieve input stream information while processing "{}" video)",
+            request.path_to_video);
         return std::nullopt;
     }
 
     // Выводим метаданные о входном видеофайле
-    //input_video_context.dump_info_to_console();
+    // input_video_context.dump_info_to_console();
 
     AVOutputFormatContextWrapper output_video_context{path_to_output_file};
     if (!output_video_context.is_valid()) {
@@ -99,12 +104,13 @@ std::optional<std::string> extract_video_segment_from_beginning(
     }
 
     // Выводим метаданные о выходном файле
-    //output_video_context.dump_info_to_console();
+    // output_video_context.dump_info_to_console();
 
     if (!(output_video_context->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&output_video_context->pb, path_to_output_file.c_str(),
                       AVIO_FLAG_WRITE) < 0) {
-            Logger::get_instance().err(R"(Couldn't open output file: "{}")", path_to_output_file);
+            Logger::get_instance().err(R"(Couldn't open output file: "{}")",
+                                       path_to_output_file);
             return std::nullopt;
         }
     }
@@ -143,7 +149,7 @@ std::optional<std::string> extract_video_segment_from_beginning(
 
         AVStream* in_stream{
             input_video_context->streams[current_packet->stream_index]};
-        
+
         // Видимо, избавляемся от битых пакетов
         if (current_packet->stream_index >= stream_mapping_size ||
             stream_mapping[current_packet->stream_index] < 0) {

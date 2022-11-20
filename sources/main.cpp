@@ -30,11 +30,13 @@ int main(int argc, char* argv[]) {
 
         // Initialise the server.
         http::server::server s(argv[1], argv[2], argv[3]);
-        Logger::get_instance().info("Server has been started at address {}:{} with document root: {}", argv[1], argv[2], argv[3]);
-        
+        Logger::get_instance().info(
+            "Server has been started at address {}:{} with document root: {}",
+            argv[1], argv[2], argv[3]);
+
         // Run the server until stopped.
         s.run();
-        
+
     } catch (std::exception& e) {
         std::cerr << "exception: " << e.what() << "\n";
     }

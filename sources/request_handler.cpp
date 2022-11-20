@@ -9,12 +9,12 @@
 //
 
 #include "request_handler.hpp"
+#include "logger.hpp"
 #include "mime_types.hpp"
 #include "path_parser.hpp"
 #include "reply.hpp"
 #include "request.hpp"
 #include "video_processing.hpp"
-#include "logger.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <fstream>
@@ -32,7 +32,8 @@ void request_handler::handle_request(const request& req, reply& rep) {
     // Decode url to path.
     std::string request_path;
     if (!url_decode(req.uri, request_path)) {
-        Logger::get_instance().err("Requested uri hadn't been decoded properly!");
+        Logger::get_instance().err(
+            "Requested uri hadn't been decoded properly!");
         rep = reply::stock_reply(reply::bad_request);
         return;
     }
@@ -50,25 +51,31 @@ void request_handler::handle_request(const request& req, reply& rep) {
     std::string path_to_result_file{};
     if (request_processing::parse_cut_video_request(request_path,
                                                     cut_video_request)) {
-        Logger::get_instance().info("video format: {}, path to video: {}, start point: {} ms, duration {} ms",
-            cut_video_request.video_format,
-            cut_video_request.path_to_video,
-            cut_video_request.video_start_point_ms,
-            cut_video_request.video_duration_ms);
+        Logger::get_instance().info("video format: {}, path to video: {}, "
+                                    "start point: {} ms, duration {} ms",
+                                    cut_video_request.video_format,
+                                    cut_video_request.path_to_video,
+                                    cut_video_request.video_start_point_ms,
+                                    cut_video_request.video_duration_ms);
 
         std::optional<std::string> result{
             video_processing::extract_video_segment_from_beginning(
                 doc_root_, cut_video_request)};
         if (result) {
-            Logger::get_instance().info(R"(Processing of "{}" video has completed successfully)", cut_video_request.path_to_video);
+            Logger::get_instance().info(
+                R"(Processing of "{}" video has completed successfully)",
+                cut_video_request.path_to_video);
             path_to_result_file = *result;
         } else {
-            Logger::get_instance().err(R"(Unable to process video file: "{}". No such video)", cut_video_request.path_to_video);
+            Logger::get_instance().err(
+                R"(Unable to process video file: "{}". No such video)",
+                cut_video_request.path_to_video);
             rep = reply::stock_reply(reply::bad_request);
             return;
         }
     } else {
-        Logger::get_instance().err(R"(Received path doesn't satisfy the required format: "<video_format>/<path_to_video>/<start_ms>/<duration_ms>")");
+        Logger::get_instance().err(
+            R"(Received path doesn't satisfy the required format: "<video_format>/<path_to_video>/<start_ms>/<duration_ms>")");
     }
 
     std::ifstream is(path_to_result_file, std::ios::in | std::ios::binary);
@@ -89,7 +96,9 @@ void request_handler::handle_request(const request& req, reply& rep) {
     rep.headers[1].value =
         mime_types::extension_to_type(cut_video_request.video_format);
 
-    Logger::get_instance().info(R"(Fragment of "{}" has been returned to a client)", cut_video_request.path_to_video);
+    Logger::get_instance().info(
+        R"(Fragment of "{}" has been returned to a client)",
+        cut_video_request.path_to_video);
 }
 
 bool request_handler::url_decode(const std::string& in, std::string& out) {
