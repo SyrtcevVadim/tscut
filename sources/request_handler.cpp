@@ -32,6 +32,7 @@ void request_handler::handle_request(const request& req, reply& rep) {
     // Decode url to path.
     std::string request_path;
     if (!url_decode(req.uri, request_path)) {
+        Logger::get_instance().err("Requested uri hadn't been decoded properly!");
         rep = reply::stock_reply(reply::bad_request);
         return;
     }
@@ -39,6 +40,7 @@ void request_handler::handle_request(const request& req, reply& rep) {
     // Request path must be absolute and not contain "..".
     if (request_path.empty() || request_path[0] != '/' ||
         request_path.find("..") != std::string::npos) {
+        Logger::get_instance().err("Path shouldn't contain .. sequence");
         rep = reply::stock_reply(reply::bad_request);
         return;
     }
@@ -61,7 +63,7 @@ void request_handler::handle_request(const request& req, reply& rep) {
             Logger::get_instance().info(R"(Processing of "{}" video has completed successfully)", cut_video_request.path_to_video);
             path_to_result_file = *result;
         } else {
-            Logger::get_instance().err(R"(Unable to process video file: "{}")", cut_video_request.path_to_video);
+            Logger::get_instance().err(R"(Unable to process video file: "{}". No such video)", cut_video_request.path_to_video);
             rep = reply::stock_reply(reply::bad_request);
             return;
         }
@@ -86,7 +88,8 @@ void request_handler::handle_request(const request& req, reply& rep) {
     rep.headers[1].name = "Content-Type";
     rep.headers[1].value =
         mime_types::extension_to_type(cut_video_request.video_format);
-    Logger::get_instance().info(R"(Fragment of "{}" has been returned to a client)");
+
+    Logger::get_instance().info(R"(Fragment of "{}" has been returned to a client)", cut_video_request.path_to_video);
 }
 
 bool request_handler::url_decode(const std::string& in, std::string& out) {

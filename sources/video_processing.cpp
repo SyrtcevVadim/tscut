@@ -37,7 +37,6 @@ std::optional<std::string> extract_video_segment_from_beginning(
         AVPacketWrapper test_packet;
         if (!test_packet.is_valid()) {
             Logger::get_instance().err(R"(Couldn't allocate AVPacket while processing "{}" video)", request.path_to_video);
-            std::cerr << "Couldn't allocate AVPacket!\n";
             return std::nullopt;
         }
     }
@@ -45,15 +44,13 @@ std::optional<std::string> extract_video_segment_from_beginning(
     // Считываем заголовок из входного видеофайла
     AVInputFormatContextWrapper input_video_context{path_to_input_file};
     if (!input_video_context.is_valid()) {
-        std::cerr << "Couldn't open input file " << path_to_input_file
-                  << std::endl;
+        Logger::get_instance().err(R"(Couldn't open input file: "{}")", path_to_input_file);
         return std::nullopt;
     }
 
     // Извлекаем данные о потоках из видеофайла
     if (avformat_find_stream_info(input_video_context.get_ptr(), 0) < 0) {
         Logger::get_instance().err(R"(Failed to retrieve input stream information while processing "{}" video)", request.path_to_video);
-        std::cerr << "Failed to retrieve input stream information\n";
         return std::nullopt;
     }
 
@@ -62,7 +59,7 @@ std::optional<std::string> extract_video_segment_from_beginning(
 
     AVOutputFormatContextWrapper output_video_context{path_to_output_file};
     if (!output_video_context.is_valid()) {
-        std::cerr << "Couldn't create output context\n";
+        Logger::get_instance().err("Couldn't create output context");
         return std::nullopt;
     }
 
@@ -91,12 +88,12 @@ std::optional<std::string> extract_video_segment_from_beginning(
         AVStream* out_stream{
             avformat_new_stream(output_video_context.get_ptr(), nullptr)};
         if (out_stream == nullptr) {
-            std::cerr << "Failed allocating output stream\n";
+            Logger::get_instance().err("Failed to allocate output stream");
             return std::nullopt;
         }
         if (avcodec_parameters_copy(out_stream->codecpar, in_codec_parameters) <
             0) {
-            std::cerr << "Failed to copy codec parameters\n";
+            Logger::get_instance().err("Failed to copy codec parameters");
         }
         out_stream->codecpar->codec_tag = 0;
     }
@@ -107,20 +104,20 @@ std::optional<std::string> extract_video_segment_from_beginning(
     if (!(output_video_context->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&output_video_context->pb, path_to_output_file.c_str(),
                       AVIO_FLAG_WRITE) < 0) {
-            std::cerr << "Couldn't open output file " << path_to_output_file;
+            Logger::get_instance().err(R"(Couldn't open output file: "{}")", path_to_output_file);
             return std::nullopt;
         }
     }
 
     // Пишем в выходной файл заголовки
     if (!output_video_context.write_header(nullptr)) {
-        std::cerr << "Error occured when opening output file\n";
+        Logger::get_instance().err("Error occured while openning output file");
         return std::nullopt;
     }
 
     AVPacketWrapper current_packet;
     if (!current_packet.is_valid()) {
-        std::cerr << "Couldn't allocate AVPacket\n";
+        Logger::get_instance().err("Couldn't allocate AVPacket");
         return std::nullopt;
     }
 
@@ -177,7 +174,7 @@ std::optional<std::string> extract_video_segment_from_beginning(
 
         if (av_interleaved_write_frame(output_video_context.get_ptr(),
                                        current_packet.get_ptr()) < 0) {
-            std::cerr << "Error muxing packet\n";
+            Logger::get_instance().err("Error has occured while muxing packet");
             break;
         }
     }
